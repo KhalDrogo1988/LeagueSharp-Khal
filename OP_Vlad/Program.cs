@@ -244,6 +244,27 @@ namespace Vladimir
             };
 
         }
+				private static double GetComboDamage(Obj_AI_Base target)
+				{
+					double comboDamage = 0;
+
+					if (Q.IsReady())
+						comboDamage += Player.GetSpellDamage(target, SpellSlot.Q);
+
+					if (E.IsReady())
+						comboDamage += Player.GetSpellDamage(target, SpellSlot.E);
+
+					if (R.IsReady())
+					{
+						comboDamage += Player.GetSpellDamage(target, SpellSlot.R);
+						comboDamage += comboDamage * 1.12;
+					}
+					else if (target.HasBuff("vladimirhemoplaguedebuff", true))
+					{
+						comboDamage += comboDamage * 1.12;
+					}
+					return (double)(comboDamage + Player.GetAutoAttackDamage(target));
+				}
         private static void Combo()
         {
             var target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
@@ -254,7 +275,7 @@ namespace Vladimir
                     Q.Cast(target);
                 if (Player.Distance(target.ServerPosition) <= E.Range && E.IsReady())
                     E.Cast();
-                if (Player.Distance(target.ServerPosition) <= R.Range + R.Width && R.IsReady())
+								if (Player.Distance(target.ServerPosition) <= R.Range + R.Width && R.IsReady() && target.Health - GetComboDamage(target) <= 0)
                     R.Cast(target, true, true);
             }
         }
