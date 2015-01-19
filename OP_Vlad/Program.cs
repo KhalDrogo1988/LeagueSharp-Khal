@@ -40,7 +40,7 @@ namespace Vladimir
         private static void Game_OnGameLoad(EventArgs args)
         {
             Player = ObjectManager.Player;
-            if (Player.BaseSkinName != ChampionName) return;
+            //if (Player.BaseSkinName != ChampionName) return;
 
             //Create the spells
             Q = new Spell(SpellSlot.Q, 600);
@@ -114,7 +114,9 @@ namespace Vladimir
 						return 1;
 					if (SpellName == "SyndraR")
 						return 1;
-					if (SpellName == "DariusExecute")
+					if (SpellName == "DariusExeGrabCone") //Hak Dariusa
+						return 1;
+					if (SpellName == "DariusExecute") //Ult Dariusa
 						return 1;
 					if (SpellName == "Feast")
 						return 1;
@@ -150,6 +152,23 @@ namespace Vladimir
 						return 1;
 					if (SpellName == "SonaCrescendo")
 						return 1;
+					if (SpellName == "GarenQ")
+						return 1;
+					if (SpellName == "GarenR")
+						return 1;
+					if (SpellName == "PantheonW")
+						return 1;
+					if (SpellName == "JaxCounterStrike")
+					{
+						//To do Odczekac 0.5 sec i wtedy zkastowac w bo jaxa e i vlad w maja po 2 sec ale jax mozezkastowac E troszeczke pozniej :)
+						return 1;
+					}
+					if (SpellName == "IreliaEquilibriumStrike")
+					{
+						//To Do Jeœli moje hp % wieksze od % HP ireli 
+						return 1; 
+					}
+						
 
 					return 0;
 				}
@@ -188,7 +207,9 @@ namespace Vladimir
 				}
 
         public static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base unit, GameObjectProcessSpellCastEventArgs attack)
-        {
+        {	
+					//if(!attack.SData.IsAutoAttack())
+					//Game.PrintChat(attack.SData.Name.ToString());
 
 					if (unit.IsValid<Obj_AI_Hero>() && unit.IsEnemy && attack.Target.IsMe && W.IsReady())
 					{
@@ -196,6 +217,15 @@ namespace Vladimir
 						dmg = unit.GetSpellDamage(ObjectManager.Player, attack.SData.Name);
 						double HpLeft = ObjectManager.Player.Health - dmg;
 						double HpPercentage = (dmg * 100) / ObjectManager.Player.MaxHealth;
+						//Game.PrintChat(dmg.ToString());
+						//Game.PrintChat(HpLeft.ToString());
+						//Game.PrintChat(HpPercentage.ToString());
+						//Game.PrintChat(attack.SData.Name.ToString());
+
+						if (ShouldUseW(attack.SData.Name) == 1)
+						{
+							W.Cast();
+						}
 
 						if (HpLeft <= 0 )
 						{
@@ -206,11 +236,7 @@ namespace Vladimir
 						}
 					}
 
-					if (ShouldUseW(attack.SData.Name) == 1 && W.IsReady())
-					{
-						W.Cast();
-					}
-
+					/*
 					if ((attack.SData.SpellTotalTime < 0 || attack.SData.LineWidth > 0) && attack.Target.GetType().Name != "Obj_AI_Hero")
 					{
 						if (attack.SData.MissileSpeed == 0 && attack.SData.LineWidth == 0)
@@ -230,7 +256,8 @@ namespace Vladimir
 					if (WillHit(attack.Start, ObjectManager.Player.ServerPosition, attack.End, PredictedType, attack.SData.LineWidth, attack.SData.CastRange[0]) && W.IsReady())
 					{
 						W.Cast();
-					}	
+					}
+					 */
         }
         public static void Game_OnGameUpdate(EventArgs args)
         {
@@ -275,7 +302,7 @@ namespace Vladimir
                     Q.Cast(target);
                 if (Player.Distance(target.ServerPosition) <= E.Range && E.IsReady())
                     E.Cast();
-								if (Player.Distance(target.ServerPosition) <= R.Range + R.Width && R.IsReady() && target.Health - GetComboDamage(target) <= 0)
+								if (Player.Distance(target.ServerPosition) <= R.Range && R.IsReady())
                     R.Cast(target, true, true);
             }
         }
