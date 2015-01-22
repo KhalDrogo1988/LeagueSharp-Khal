@@ -37,7 +37,6 @@ namespace xWard
             
             xMenu.AddSubMenu(new Menu("Ward", "Ward"));
             xMenu.SubMenu("Ward").AddItem(new MenuItem("Draww", "Draw Ward Locations").SetValue(true));
-            xMenu.SubMenu("Ward").AddItem(new MenuItem("placew", "Place Ward").SetValue(new KeyBind('Z', KeyBindType.Press)));
 						xMenu.SubMenu("Ward").AddItem(new MenuItem("placew", "Place Ward").SetValue(true));
             
 
