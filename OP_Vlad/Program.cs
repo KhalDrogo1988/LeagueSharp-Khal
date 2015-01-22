@@ -19,6 +19,9 @@ namespace Vladimir
         public static List<Spell> SpellList = new List<Spell>();
 
 				public static SkillshotType PredictedType;
+				public static Orbwalking.Orbwalker Orbwalker;
+				public static bool Farm = false;
+
 
         public static Spell Q;
 				public static Spell W;
@@ -58,6 +61,10 @@ namespace Vladimir
 
             //Create the menu
             Config = new Menu(ChampionName, ChampionName, true);
+
+						Config.AddSubMenu(new Menu("Orbwalking", "Orbwalking"));
+						//Load the orbwalker and add it to the submenu.
+						Orbwalker = new Orbwalking.Orbwalker(Config.SubMenu("Orbwalking"));
 
             var targetSelectorMenu = new Menu("Target Selector", "Target Selector");
             TargetSelector.AddToMenu(targetSelectorMenu);
@@ -173,39 +180,6 @@ namespace Vladimir
 					return 0;
 				}
 
-				public static bool WillHit(Vector3 from, Vector3 point, Vector3 castPosition, SkillshotType Type, float Width, float Range, int extraWidth = 0)
-				{
-					switch (Type)
-					{
-						case SkillshotType.SkillshotCircle:
-							if (point.To2D().Distance(castPosition) < Width)
-							{
-								return true;
-							}
-							break;
-
-						case SkillshotType.SkillshotLine:
-							if (point.To2D().Distance(castPosition.To2D(), from.To2D(), true) < Width + extraWidth)
-							{
-								return true;
-							}
-							break;
-						case SkillshotType.SkillshotCone:
-							var edge1 = (castPosition.To2D() - from.To2D()).Rotated(-Width / 2);
-							var edge2 = edge1.Rotated(Width);
-							var v = point.To2D() - from.To2D();
-							if (point.To2D().Distance(from) < Range && edge1.CrossProduct(v) > 0 && v.CrossProduct(edge2) > 0)
-							{
-								return true;
-							}
-							break;
-						default:
-							return true;
-					}
-
-					return false;
-				}
-
         public static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base unit, GameObjectProcessSpellCastEventArgs attack)
         {	
 					//if(!attack.SData.IsAutoAttack())
@@ -221,6 +195,7 @@ namespace Vladimir
 						//Game.PrintChat(HpLeft.ToString());
 						//Game.PrintChat(HpPercentage.ToString());
 						//Game.PrintChat(attack.SData.Name.ToString());
+						W.Cast();
 
 						if (ShouldUseW(attack.SData.Name) == 1)
 						{
@@ -235,40 +210,46 @@ namespace Vladimir
 							W.Cast();
 						}
 					}
-
-					/*
-					if ((attack.SData.SpellTotalTime < 0 || attack.SData.LineWidth > 0) && attack.Target.GetType().Name != "Obj_AI_Hero")
-					{
-						if (attack.SData.MissileSpeed == 0 && attack.SData.LineWidth == 0)
-						{
-							PredictedType = SkillshotType.SkillshotCone;
-						}
-						else if (attack.SData.LineWidth == 0)
-						{
-							PredictedType = SkillshotType.SkillshotCircle;
-						}
-						else if (attack.SData.LineWidth > 0 && attack.SData.MissileSpeed > 0)
-						{
-							PredictedType = SkillshotType.SkillshotLine;
-						}
-					}
-
-					if (WillHit(attack.Start, ObjectManager.Player.ServerPosition, attack.End, PredictedType, attack.SData.LineWidth, attack.SData.CastRange[0]) && W.IsReady())
-					{
-						W.Cast();
-					}
-					 */
         }
         public static void Game_OnGameUpdate(EventArgs args)
         {
+
+						//Game.PrintChat(Game.Time.ToString());
+						var allMinions = MinionManager.GetMinions(Player.ServerPosition, Q.Range);
+
+
+						if (Orbwalker.ActiveMode.ToString() == "LaneClear")
+							Farm = true;
+						else
+							Farm = false;
+
             if (Config.Item("ComboActive").GetValue<KeyBind>().Active)
             {
 							Combo();
-            };
+						}else{
+							var target = TargetSelector.GetTarget(700, TargetSelector.DamageType.Magical);
+
+							if (Q.IsReady() || E.IsReady() && target == null)
+								{
+										if (Farm)
+										{
+												foreach (var minion in allMinions)
+												{
+														Q.CastOnUnit(minion);
+														E.CastOnUnit(minion);
+												}
+											}
+								}
+							else
+							{
+								Combo();
+							}
+						}
+
             if (Config.Item("HarassActive").GetValue<KeyBind>().Active)
             {
 							Harass();
-            };
+            }
 
         }
 				private static double GetComboDamage(Obj_AI_Base target)

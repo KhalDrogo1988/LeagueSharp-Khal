@@ -81,7 +81,7 @@ namespace PotionMenager
 			//https://github.com/h3h3/BehaviorSharp/tree/master/BehaviorSharp
 			//HealthPotion = ObjectManager.Player.InventoryItems.FirstOrDefault(i => i.Id == ItemId.Health_Potion);
 
-			if (Utility.CountEnemysInRange(1000) > 0 )
+			if (Utility.CountEnemiesInRange(ObjectManager.Player.ServerPosition, 1000) > 0 )
 			{
 				if (HpPercentage <= hpborder.GetValue<Slider>().Value)
 					{
@@ -108,7 +108,7 @@ namespace PotionMenager
 			{
 				var spell = sender.GetDamageSpell(ObjectManager.Player, args.SData.Name);
 
-				spell.
+				
 				dmg = sender.GetSpellDamage(ObjectManager.Player, args.SData.Name);
 				Game.PrintChat(args.SData.Name.ToString());
 				//recivedmg = sender.CalcDamage(ObjectManager.Player, Damage.DamageType.Magical, dmg);
