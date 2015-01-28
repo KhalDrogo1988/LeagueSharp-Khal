@@ -29,6 +29,8 @@ namespace Vladimir
         public static Spell R;
         public float lastE = 0f;
 
+				public static  int[] levels = new int[] { 1,2,3,1,1,4,1,1,3,3,3,4,3,2,2,2,2,4 };
+
 				public static double dmg;
         //Menu
         public static Menu Config;
@@ -213,6 +215,22 @@ namespace Vladimir
         }
         public static void Game_OnGameUpdate(EventArgs args)
         {
+						int qL = ObjectManager.Player.Spellbook.GetSpell(SpellSlot.Q).Level;
+						int wL = ObjectManager.Player.Spellbook.GetSpell(SpellSlot.W).Level;
+						int eL = ObjectManager.Player.Spellbook.GetSpell(SpellSlot.E).Level;
+						int rL = ObjectManager.Player.Spellbook.GetSpell(SpellSlot.R).Level;
+
+						if (qL + wL + eL + rL < ObjectManager.Player.Level)
+						{
+							int[] level = new int[] { 0, 0, 0, 0 };
+							for (int i = 0; i < ObjectManager.Player.Level; i++)
+								level[levels[i] - 1] = level[levels[i] - 1] + 1;
+
+							if (qL < level[0]) ObjectManager.Player.Spellbook.LevelUpSpell(SpellSlot.Q);
+							if (wL < level[1]) ObjectManager.Player.Spellbook.LevelUpSpell(SpellSlot.W);
+							if (eL < level[2]) ObjectManager.Player.Spellbook.LevelUpSpell(SpellSlot.E);
+							if (rL < level[3]) ObjectManager.Player.Spellbook.LevelUpSpell(SpellSlot.R);
+						}
 
 						//Game.PrintChat(Game.Time.ToString());
 						var allMinions = MinionManager.GetMinions(Player.ServerPosition, Q.Range);
@@ -252,27 +270,7 @@ namespace Vladimir
             }
 
         }
-				private static double GetComboDamage(Obj_AI_Base target)
-				{
-					double comboDamage = 0;
 
-					if (Q.IsReady())
-						comboDamage += Player.GetSpellDamage(target, SpellSlot.Q);
-
-					if (E.IsReady())
-						comboDamage += Player.GetSpellDamage(target, SpellSlot.E);
-
-					if (R.IsReady())
-					{
-						comboDamage += Player.GetSpellDamage(target, SpellSlot.R);
-						comboDamage += comboDamage * 1.12;
-					}
-					else if (target.HasBuff("vladimirhemoplaguedebuff", true))
-					{
-						comboDamage += comboDamage * 1.12;
-					}
-					return (double)(comboDamage + Player.GetAutoAttackDamage(target));
-				}
         private static void Combo()
         {
             var target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
@@ -283,8 +281,10 @@ namespace Vladimir
                     Q.Cast(target);
                 if (Player.Distance(target.ServerPosition) <= E.Range && E.IsReady())
                     E.Cast();
-								if (Player.Distance(target.ServerPosition) <= R.Range && R.IsReady())
+								if (Player.Distance(target.ServerPosition) <= R.Range && R.IsReady() && target.CountEnemiesInRange(350f) > 2)
                     R.Cast(target, true, true);
+								if (Player.Distance(target.ServerPosition) <= R.Range && R.IsReady() && Player.GetSpellDamage(target, SpellSlot.R) > target.Health)
+									R.Cast(target, true, true);
             }
         }
         private static void Harass()
